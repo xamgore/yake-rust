@@ -182,7 +182,7 @@ impl Yake {
             .into_iter()
             .map(|sentence| {
                 let words = preprocessor::split_into_words(&sentence, &cfg);
-                let stems = words.iter().map(|w| w.to_lowercase()).collect();
+                let stems = words.iter().map(|w| w.to_lowercase().to_single()).collect();
                 Sentence::new(words, stems)
             })
             .collect()
@@ -195,7 +195,7 @@ impl Yake {
             let first_surf_form = &v.surface_forms[0];
 
             if first_surf_form.len() > 1 {
-                deduped.extend(first_surf_form.iter().map(|word| (word.to_lowercase(), true)));
+                deduped.extend(first_surf_form.iter().map(|word| (word.to_lowercase().to_single(), true)));
             }
 
             let (fst, lst) = (&first_surf_form[0], first_surf_form.last().unwrap());
@@ -218,7 +218,7 @@ impl Yake {
                     && word.chars().all(char::is_alphanumeric)
                     && HashSet::from_iter(word.chars()).intersection(&self.config.punctuation).next().is_none()
                 {
-                    let index = word.to_lowercase();
+                    let index = word.to_lowercase().to_single();
                     let occurrence = Occurrence { shift_offset: shift + w_idx, idx, word, shift };
                     words.entry(index).or_default().push(occurrence)
                 }
@@ -233,7 +233,7 @@ impl Yake {
 
         for sentence in sentences {
             let mut buffer: Vec<LString> = Vec::new();
-            let snt_words: Vec<LString> = sentence.words.iter().map(|w| w.to_lowercase()).collect();
+            let snt_words: Vec<LString> = sentence.words.iter().map(|w| w.to_lowercase().to_single()).collect();
 
             for snt_word in snt_words {
                 if HashSet::from_iter(snt_word.chars()).is_subset(&self.config.punctuation) {
@@ -349,9 +349,9 @@ impl Yake {
         let mut raw_lookup = HashMap::new();
 
         for (_k, v) in candidates {
-            let lowercase_forms = v.surface_forms.iter().map(|w| w.join(" ").to_lowercase() as LString);
+            let lowercase_forms = v.surface_forms.iter().map(|w| w.join(" ").to_lowercase().to_single() as LString);
             for (idx, candidate) in lowercase_forms.enumerate() {
-                let tokens = v.surface_forms[idx].iter().clone().map(|w| w.to_lowercase());
+                let tokens = v.surface_forms[idx].iter().clone().map(|w| w.to_lowercase().to_single() as LString);
                 let mut prod_ = 1.0;
                 let mut sum_ = 0.0;
 
@@ -424,7 +424,7 @@ impl Yake {
         candidates.retain(|_k, v| !{
             // get the words from the first occurring surface form
             let first_surf_form = v.surface_forms[0];
-            let words = HashSet::from_iter(first_surf_form.iter().map(|w| w.to_lowercase()));
+            let words = HashSet::from_iter(first_surf_form.iter().map(|w| w.to_lowercase().to_single()));
 
             let has_float = || words.iter().any(|w| w.parse::<f64>().is_ok());
             let has_stop_word = || words.intersection(&self.config.stop_words).next().is_some();
